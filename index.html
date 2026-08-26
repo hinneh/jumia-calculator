@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jumia pricing calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F4F5F1;
+    --surface:#FFFFFF;
+    --ink:#1A1D1B;
+    --muted:#6B6F6C;
+    --hairline:#DEDFDA;
+    --accent:#E8630C;
+    --accent-deep:#8C3B08;
+    --accent-bg:#FCE7D8;
+    --margin:#1F7A5C;
+    --margin-bg:#E1EFE9;
+    --danger:#B3261E;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', system-ui, sans-serif;
+    display:flex;
+    justify-content:center;
+    padding:48px 20px 80px;
+  }
+  .wrap{width:100%; max-width:480px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:14px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--accent-deep);
+    margin:0 0 8px;
+  }
+  h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:28px;
+    margin:0 0 6px;
+    letter-spacing:-0.01em;
+  }
+  .sub{
+    color:var(--muted);
+    font-size:14px;
+    margin:0 0 28px;
+    line-height:1.5;
+  }
+  .card{
+    background:var(--surface);
+    border:1px solid var(--hairline);
+    border-radius:14px;
+    padding:24px;
+  }
+  .field{margin-bottom:20px;}
+  .field:last-child{margin-bottom:0;}
+  label{
+    display:block;
+    font-size:12px;
+    font-weight:500;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    margin-bottom:8px;
+  }
+  select, input[type=number]{
+    width:100%;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:16px;
+    padding:11px 12px;
+    border:1px solid var(--hairline);
+    border-radius:8px;
+    background:var(--surface);
+    color:var(--ink);
+  }
+  select:focus, input:focus{
+    outline:none;
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px var(--accent-bg);
+  }
+  select.invalid{
+    border-color:var(--danger);
+    box-shadow:0 0 0 3px #FBE7E5;
+  }
+  .amount-row{display:flex; align-items:center; gap:8px;}
+  .amount-row span{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:15px;
+    color:var(--muted);
+  }
+  .toggle{
+    display:flex;
+    border:1px solid var(--hairline);
+    border-radius:8px;
+    overflow:hidden;
+  }
+  .toggle button{
+    flex:1;
+    border:none;
+    background:var(--surface);
+    color:var(--muted);
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:14px;
+    font-weight:500;
+    padding:10px 8px;
+    cursor:pointer;
+  }
+  .toggle button + button{border-left:1px solid var(--hairline);}
+  .toggle button.active{
+    background:var(--accent);
+    color:#fff;
+  }
+  .tear{
+    position:relative;
+    height:24px;
+    margin:0 -24px;
+  }
+  .tear::before{
+    content:"";
+    position:absolute;
+    top:0; left:0; right:0;
+    border-top:2px dashed var(--hairline);
+  }
+  .receipt{
+    padding-top:4px;
+  }
+  .rline{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13.5px;
+    color:var(--muted);
+    padding:6px 0;
+  }
+  .rline .v{color:var(--ink); font-weight:500;}
+  .rdivider{border-top:1px solid var(--hairline); margin:8px 0;}
+  .total-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    padding-top:14px;
+  }
+  .total-label{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:14px;
+    font-weight:500;
+    color:var(--muted);
+  }
+  .total-value{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:30px;
+    font-weight:500;
+    color:var(--accent-deep);
+  }
+  .margin-note{
+    margin-top:10px;
+    background:var(--margin-bg);
+    color:var(--margin);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    padding:8px 10px;
+    border-radius:6px;
+  }
+  .error{
+    color:var(--danger);
+    font-size:12.5px;
+    font-family:'IBM Plex Mono', monospace;
+    margin-top:8px;
+    display:none;
+  }
+  .formula{
+    margin-top:20px;
+    font-size:11.5px;
+    color:var(--muted);
+    line-height:1.6;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  .formula a{
+    color:var(--accent-deep);
+    text-decoration:underline;
+  }
+  .sr-only{
+    position:absolute; width:1px; height:1px;
+    padding:0; margin:-1px; overflow:hidden;
+    clip:rect(0,0,0,0); white-space:nowrap; border:0;
+  }
+  .footer{
+    margin-top:28px;
+    text-align:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--muted);
+    line-height:1.7;
+  }
+  .footer a{
+    color:var(--muted);
+    text-decoration:underline;
+  }
+  .fab{
+    position:fixed;
+    bottom:22px;
+    right:22px;
+    width:52px;
+    height:52px;
+    border-radius:50%;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    box-shadow:0 4px 14px rgba(0,0,0,0.18);
+    z-index:100;
+  }
+  .fab:hover{background:var(--accent-deep);}
+  .fab-tooltip{
+    position:fixed;
+    bottom:34px;
+    right:82px;
+    background:var(--ink);
+    color:#fff;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:13px;
+    padding:7px 12px;
+    border-radius:6px;
+    white-space:nowrap;
+    z-index:100;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.15s ease;
+  }
+  .fab-tooltip.show{opacity:1;}
+  .fab-tooltip::after{
+    content:"";
+    position:absolute;
+    top:50%;
+    right:-5px;
+    transform:translateY(-50%);
+    border-width:5px 0 5px 5px;
+    border-style:solid;
+    border-color:transparent transparent transparent var(--ink);
+  }
+  .modal-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(26,29,27,0.45);
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:200;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal{
+    background:var(--surface);
+    border-radius:14px;
+    width:100%;
+    max-width:380px;
+    padding:24px;
+  }
+  .modal h3{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:18px;
+    font-weight:600;
+    margin:0 0 4px;
+  }
+  .modal .modal-sub{
+    font-size:13px;
+    color:var(--muted);
+    margin:0 0 20px;
+    line-height:1.5;
+  }
+  .modal .field{margin-bottom:16px;}
+  .modal textarea{
+    width:100%;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:15px;
+    padding:11px 12px;
+    border:1px solid var(--hairline);
+    border-radius:8px;
+    background:var(--surface);
+    color:var(--ink);
+    resize:vertical;
+    min-height:80px;
+  }
+  .modal textarea:focus, .modal input:focus{
+    outline:none;
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px var(--accent-bg);
+  }
+  .modal-actions{
+    display:flex;
+    gap:10px;
+    margin-top:4px;
+  }
+  .btn-submit{
+    flex:1;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding:11px;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:14px;
+    font-weight:500;
+    cursor:pointer;
+  }
+  .btn-submit:hover{background:var(--accent-deep);}
+  .btn-cancel{
+    background:var(--surface);
+    color:var(--muted);
+    border:1px solid var(--hairline);
+    border-radius:8px;
+    padding:11px 16px;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .modal-error{
+    color:var(--danger);
+    font-size:12.5px;
+    font-family:'IBM Plex Mono', monospace;
+    margin:-8px 0 16px;
+    display:none;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h2 class="sr-only">Jumia pricing calculator: pick a category and shipping method, enter your vendor amount, and see the selling price and margin breakdown.</h2>
+  <p class="eyebrow">Jumia · Ghana</p>
+  <h1>Pricing calculator</h1>
+  <p class="sub">Selling price = (vendor amount + shipping contribution) ÷ (1 − commission).</p>
+
+  <div class="card">
+    <div class="field">
+      <label for="category">Category</label>
+      <select id="category">
+        <option value="" disabled selected>Choose category</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Shipping method</label>
+      <div class="toggle">
+        <button type="button" id="btn-drop" class="active">Dropshipping</button>
+        <button type="button" id="btn-express">Jumia Express</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="vendorAmount">Vendor amount (GHS)</label>
+      <div class="amount-row">
+        <span>GHS</span>
+        <input type="number" id="vendorAmount" placeholder="Enter your amount/cost" min="0" step="0.01">
+      </div>
+      <div class="error" id="inputError">Enter a vendor amount of 0 or more.</div>
+    </div>
+
+    <div class="tear"></div>
+
+    <div class="receipt">
+      <div class="rline"><span>Vendor amount</span><span class="v" id="out-vendor">GHS 0.00</span></div>
+      <div class="rline"><span id="out-shiplabel">Shipping contribution</span><span class="v" id="out-shipping">GHS 0.00</span></div>
+      <div class="rline"><span>Commission rate</span><span class="v" id="out-commrate">0.0%</span></div>
+      <div class="rdivider"></div>
+      <div class="rline"><span>Commission taken</span><span class="v" id="out-commamt">GHS 0.00</span></div>
+      <div class="rline"><span>Net payout to you</span><span class="v" id="out-netpayout">GHS 0.00</span></div>
+
+      <div class="total-row">
+        <span class="total-label">Sell at</span>
+        <span class="total-value" id="out-total">GHS 0.00</span>
+      </div>
+      <div class="margin-note" id="out-check">Net payout matches vendor amount ✓</div>
+    </div>
+
+    <div class="formula">
+      Commission and shipping contribution come from the Jumia fee table on their <a href="https://vendorhub.jumia.com.gh/fees-2/" target="_blank" rel="noopener">website</a>.
+    </div>
+  </div>
+
+  <div class="footer">
+    Developed by <a href="https://www.instagram.com/birdwingits" target="_blank" rel="noopener">Birdwing ITS</a><br>
+    Email: birdwingits@gmail.com<br>
+    &copy; 2026
+  </div>
+</div>
+
+<button class="fab" id="fabBtn" aria-label="Send feedback">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+</button>
+<div class="fab-tooltip" id="fabTooltip">Give feedback</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>Send feedback</h3>
+    <p class="modal-sub">Have a suggestion to improve this calculator? Tell us.</p>
+    <div class="field">
+      <label for="fbMessage">Message</label>
+      <textarea id="fbMessage" placeholder="What should we fix or add?"></textarea>
+    </div>
+    <div class="modal-error" id="fbError">Enter a message before submitting.</div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="fbCancel" type="button">Cancel</button>
+      <button class="btn-submit" id="fbSubmit" type="button">Submit</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const FEES = [
+    ["Audio & Hifi",0.15,18,12],
+    ["Automotive",0.15,10,8],
+    ["Automotive Fluids & Maintenance",0.10,18,12],
+    ["Automotive Lighting",0.15,18,12],
+    ["Automotive Power & Battery",0.05,30,30],
+    ["Beauty Appliances",0.15,10,8],
+    ["Bulky Sporting Goods",0.05,30,30],
+    ["Cameras",0.10,10,8],
+    ["Computing Accessories",0.16,10,8],
+    ["Desktop, Monitors & Printers",0.08,15,10],
+    ["Electronics Accessories",0.16,10,8],
+    ["Fashion",0.20,8,6],
+    ["Feature phones",0.09,10,8],
+    ["Furniture",0.15,30,30],
+    ["Gaming Accessories",0.16,10,8],
+    ["Gaming Consoles",0.10,18,12],
+    ["Grocery",0.20,8,6],
+    ["Grocery Bulky",0.20,30,30],
+    ["Health & Beauty",0.20,8,6],
+    ["Home",0.17,15,10],
+    ["Irons",0.13,18,12],
+    ["Kettles",0.13,18,12],
+    ["Kids & Baby",0.15,10,8],
+    ["Laptops",0.08,18,12],
+    ["Large Appliances",0.12,45,35],
+    ["Mixing & Blending",0.13,18,12],
+    ["Mobile Phone",0.07,10,8],
+    ["RV Parts & Accessories",0.10,18,12],
+    ["Small Appliances",0.12,18,12],
+    ["Sporting Goods",0.15,10,8],
+    ["Tablets",0.11,10,8],
+    ["Televisions",0.08,18,12],
+    ["Toys & Games",0.15,10,8],
+    ["Video Games",0.13,10,8]
+  ];
+  // [category, commission, shippingDropshipping, shippingJumiaExpress]
+
+  const categorySelect = document.getElementById('category');
+  FEES.forEach(row => {
+    const opt = document.createElement('option');
+    opt.value = row[0];
+    opt.textContent = row[0];
+    categorySelect.appendChild(opt);
+  });
+  categorySelect.value = "";
+
+  const btnDrop = document.getElementById('btn-drop');
+  const btnExpress = document.getElementById('btn-express');
+  let shipMode = 'drop';
+
+  btnDrop.addEventListener('click', () => { shipMode = 'drop'; btnDrop.classList.add('active'); btnExpress.classList.remove('active'); document.getElementById('out-shiplabel').textContent = 'Shipping contribution (dropshipping)'; compute(); });
+  btnExpress.addEventListener('click', () => { shipMode = 'express'; btnExpress.classList.add('active'); btnDrop.classList.remove('active'); document.getElementById('out-shiplabel').textContent = 'Shipping contribution (Jumia Express)'; compute(); });
+  document.getElementById('out-shiplabel').textContent = 'Shipping contribution (dropshipping)';
+
+  const vendorInput = document.getElementById('vendorAmount');
+  const errorEl = document.getElementById('inputError');
+  let categoryAlertShown = false;
+
+  categorySelect.addEventListener('change', () => {
+    categorySelect.classList.remove('invalid');
+    categoryAlertShown = false;
+    compute();
+  });
+
+  function fmt(n){
+    return 'GHS ' + n.toLocaleString('en-GH', {minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+
+  function compute(){
+    const catRow = FEES.find(r => r[0] === categorySelect.value);
+    const vendorRaw = vendorInput.value;
+    const vendorAmount = parseFloat(vendorRaw);
+
+    if (!catRow) {
+      errorEl.style.display = 'none';
+      ['out-vendor','out-shipping','out-commamt','out-netpayout','out-total'].forEach(id => {
+        document.getElementById(id).textContent = fmt(0);
+      });
+      document.getElementById('out-commrate').textContent = '0.0%';
+
+      if (vendorRaw !== '') {
+        categorySelect.classList.add('invalid');
+        if (!categoryAlertShown) {
+          categoryAlertShown = true;
+          alert('Choose Category first');
+        }
+      }
+      return;
+    }
+
+    if (vendorRaw === '') {
+      errorEl.style.display = 'none';
+      ['out-vendor','out-shipping','out-commamt','out-netpayout','out-total'].forEach(id => {
+        document.getElementById(id).textContent = fmt(0);
+      });
+      document.getElementById('out-commrate').textContent = (catRow[1] * 100).toFixed(1) + '%';
+      return;
+    }
+    if (isNaN(vendorAmount) || vendorAmount < 0) {
+      errorEl.style.display = 'block';
+      return;
+    }
+    errorEl.style.display = 'none';
+
+    const commission = catRow[1];
+    const shipping = shipMode === 'drop' ? catRow[2] : catRow[3];
+
+    const total = (vendorAmount + shipping) / (1 - commission);
+    const commissionAmount = total * commission;
+    const netPayout = total - commissionAmount - shipping;
+
+    document.getElementById('out-vendor').textContent = fmt(vendorAmount);
+    document.getElementById('out-shipping').textContent = fmt(shipping);
+    document.getElementById('out-commrate').textContent = (commission * 100).toFixed(1) + '%';
+    document.getElementById('out-commamt').textContent = fmt(commissionAmount);
+    document.getElementById('out-netpayout').textContent = fmt(netPayout);
+    document.getElementById('out-total').textContent = 'GHS ' + Math.round(total).toLocaleString('en-GH');
+
+    const expectedNet = vendorAmount;
+    const diff = Math.abs(expectedNet - netPayout);
+    const checkEl = document.getElementById('out-check');
+    if (diff < 0.01) {
+      checkEl.textContent = 'Net payout matches vendor amount ✓';
+      checkEl.style.background = 'var(--margin-bg)';
+      checkEl.style.color = 'var(--margin)';
+    } else {
+      checkEl.textContent = 'Net payout does not reconcile — check inputs.';
+      checkEl.style.background = '#FBE7E5';
+      checkEl.style.color = 'var(--danger)';
+    }
+  }
+
+  vendorInput.addEventListener('input', compute);
+
+  compute();
+
+  const fabBtn = document.getElementById('fabBtn');
+  const fabTooltip = document.getElementById('fabTooltip');
+  const modalOverlay = document.getElementById('modalOverlay');
+  const fbCancel = document.getElementById('fbCancel');
+  const fbSubmit = document.getElementById('fbSubmit');
+  const fbMessage = document.getElementById('fbMessage');
+  const fbError = document.getElementById('fbError');
+
+  fabBtn.addEventListener('mouseenter', () => fabTooltip.classList.add('show'));
+  fabBtn.addEventListener('mouseleave', () => fabTooltip.classList.remove('show'));
+  fabBtn.addEventListener('focus', () => fabTooltip.classList.add('show'));
+  fabBtn.addEventListener('blur', () => fabTooltip.classList.remove('show'));
+
+  function openModal(){ modalOverlay.classList.add('open'); fabTooltip.classList.remove('show'); }
+  function closeModal(){
+    modalOverlay.classList.remove('open');
+    fbError.style.display = 'none';
+    fbMessage.value = '';
+  }
+
+  fabBtn.addEventListener('click', openModal);
+  fbCancel.addEventListener('click', closeModal);
+  modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+
+  fbSubmit.addEventListener('click', () => {
+    const message = fbMessage.value.trim();
+
+    if (!message) {
+      fbError.style.display = 'block';
+      return;
+    }
+    fbError.style.display = 'none';
+
+    const subject = encodeURIComponent('Calculator feedback');
+    const body = encodeURIComponent(message);
+    window.location.href = 'mailto:birdwingits@gmail.com?subject=' + subject + '&body=' + body;
+    closeModal();
+  });
+</script>
+</body>
+</html>
