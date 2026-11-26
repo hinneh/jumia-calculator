@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://jumiacalculator.birdwing-its.com/sitemap.xml
